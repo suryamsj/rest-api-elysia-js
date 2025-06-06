@@ -1,6 +1,7 @@
 import Elysia, { t } from "elysia";
 import { signIn, signUp } from "./handlers";
 import { jwtConfig } from "../../utils/jwt.config";
+import { hashPassword } from "../../utils/hash";
 
 const authRoutes = new Elysia({ prefix: "/auth" })
   .use(jwtConfig)
@@ -33,7 +34,11 @@ const authRoutes = new Elysia({ prefix: "/auth" })
       }),
     }
   )
-  .post("/register", ({ body }) => signUp(body), {
+  .post("/register", async({ body }) => {
+    const {name, email, password} = body;
+    const hashedPassword = await hashPassword(password);
+    return signUp({name, email, password: hashedPassword});
+  }, {
     detail: { tags: ["Auth"] },
     body: t.Object({
       name: t.String({
